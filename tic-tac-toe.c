@@ -51,32 +51,35 @@ void displayBoard(const char *player1, const char *player2, const char *fields) 
     printf("\n");
 }
 
-void updateBoard(char playerSymbol, int move, char *fields, int *player) {
-            if (move == 1 && fields[0] == '1')
-                fields[0] = playerSymbol;
-            else if (move == 2 && fields[1] == '2')
-                fields[1] = playerSymbol;
-            else if (move == 3 && fields[2] == '3')
-                fields[2] = playerSymbol;
-            else if (move == 4 && fields[3] == '4')
-                fields[3] = playerSymbol;
-            else if (move == 5 && fields[4] == '5')
-                fields[4] = playerSymbol;
-            else if (move == 6 && fields[5] == '6')
-                fields[5] = playerSymbol;
-            else if (move == 7 && fields[6] == '7')
-                fields[6] = playerSymbol;
-            else if (move == 8 && fields[7] == '8')
-                fields[7] = playerSymbol;
-            else if (move == 9 && fields[8] == '9')
-                fields[8] = playerSymbol;
-            else {
-                printf("Wrong Selection\n");
-                player--;
-            }
+int isValidMove(int move, const char *fields) {
+    if (move < 1 || move > 9) {
+        return 0; // Invalid move, out of range
+    }
+
+    int index = move - 1;
+    if (fields[index] >= '1' && fields[index] <= '9') {
+        return 1; // Valid move
+    }
+
+    return 0; // Invalid move, position already taken
 }
 
-void playGame(const char *player1, const char *player2) {
+void updateBoard(char playerSymbol, int move, char *fields, int *player) {
+    int isValid = 0;
+
+    while (!isValid) {
+        isValid = isValidMove(move, fields);
+
+        if (isValid) {
+            fields[move - 1] = playerSymbol;
+        } else {
+            printf("Invalid selection. Please choose a valid position: ");
+            scanf("%d", &move);
+        }
+    }
+}
+
+void playGame(const char *player1, const char *player2, int isAgainstAI) {
     char fields[9] = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
     int currentPlayer;
     int selectedPosition;
@@ -88,11 +91,14 @@ void playGame(const char *player1, const char *player2) {
 
     int score = -1;
     while (score == -1) {
-        if (currentPlayer == 1)
-            printf("\n%s type the field you wanna play: ", player1);
-        else
-            printf("\n%s type the field you wanna play: ", player2);
-        scanf("%d", &selectedPosition);
+        if (currentPlayer == 1 || (currentPlayer == 2 && !isAgainstAI)) {
+            printf("\n%s, enter the field you want to play: ", (currentPlayer == 1) ? player1 : player2);
+            scanf("%d", &selectedPosition);
+        } else {
+            printf("\n%s is making a move...\n", player2);
+            selectedPosition = getRandomMove(fields);
+            printf("%s chose position %d\n", player2, selectedPosition);
+        }
             
         symbol = (currentPlayer == 1) ? SYMBOL_X : SYMBOL_O;
         updateBoard(symbol, selectedPosition, fields, &currentPlayer);
@@ -100,6 +106,7 @@ void playGame(const char *player1, const char *player2) {
         score = checkGameOver(fields);
         currentPlayer = (currentPlayer == 1) ? 2 : 1;
         displayBoard(player1, player2, fields);
+        printf("The AI played in position %d", selectedPosition);
     }
 
     if (score == 1) {
@@ -113,16 +120,38 @@ void playGame(const char *player1, const char *player2) {
     }
 }
 
+int getRandomMove(char *fields) {
+    int move;
+    int availableMoves[9];
+    int numAvailableMoves = 0;
+
+    for (int i = 0; i <= 9; i++) {
+        if (isValidMove(i, fields)) {
+            availableMoves[numAvailableMoves] = i;
+            numAvailableMoves++;
+        }
+    }
+
+    if (numAvailableMoves > 0) {
+        int randomIndex = rand() % numAvailableMoves;
+        move = availableMoves[randomIndex];
+    } else {
+        move = -1;
+    }
+
+    printf("%d", move);
+    return move;
+}
+
 int main() {
     int choice;
     char player1[20], player2[20];
     
-
     printf("*******************************\n");
     printf("*   Welcome to Tic-Tac-Toe!   *\n");
     printf("*                             *\n");
-    printf("*   1. Play                   *\n");
-    printf("*   2. Leadboard              *\n");
+    printf("*   1. Play vs Friend         *\n");
+    printf("*   2. Play vs Computer       *\n");
     printf("*******************************\n\n");
     printf("\nChoose what you want: ");
     scanf("%d", &choice);
@@ -140,7 +169,17 @@ int main() {
         } while (strcmp(player1, player2) == 0);
         
         srand(time(NULL));
-        playGame(player1, player2);        
+        playGame(player1, player2, 0);        
+        break;
+    
+    case 2:
+        printf("\nEnter your name: ");
+        scanf("%s", player1);
+
+        strcpy(player2, "AI");
+
+        srand(time(NULL));
+        playGame(player1, player2, 1);
         break;
     
     default:
