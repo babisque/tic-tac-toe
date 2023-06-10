@@ -27,6 +27,7 @@ This is a simple implementation of the classic game Tic-Tac-Toe in C. It allows 
 
 ## Features
 
+* Play against computer.
 * Two-player gameplay.
 * Simple console-based user interface.
 * Clear the console screen between moves for better visibility.

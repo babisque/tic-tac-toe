@@ -11,6 +11,8 @@
     #define OS "posix"
 #endif
 
+int moves[NUM_SEQUENCES][MAX_SEQUENCE_LENGTH - 1];
+
 int checkGameOver(char *fields) {
     if (fields[0] == fields[1] && fields[1] == fields[2])
         return 1;
@@ -53,15 +55,15 @@ void displayBoard(const char *player1, const char *player2, const char *fields) 
 
 int isValidMove(int move, const char *fields) {
     if (move < 1 || move > 9) {
-        return 0; // Invalid move, out of range
+        return 0;
     }
 
     int index = move - 1;
     if (fields[index] >= '1' && fields[index] <= '9') {
-        return 1; // Valid move
+        return 1;
     }
 
-    return 0; // Invalid move, position already taken
+    return 0;
 }
 
 void updateBoard(char playerSymbol, int move, char *fields, int *player) {
@@ -143,6 +145,29 @@ int getRandomMove(char *fields) {
     return move;
 }
 
+void readWinnerSequences() {
+    FILE *f;
+    f = fopen("everyWinSequence.txt", "r");
+    if (f == 0 || f == NULL) {
+        printf("IA isn't available");
+    }
+
+    int i, j;
+
+    for (i = 0; i < NUM_SEQUENCES; i++) {
+        for (j = 0; j < MAX_SEQUENCE_LENGTH - 1; j++) {
+            if (fscanf(f, "%1d", &moves[i][j]) != 1) {
+                printf("Failed to read sequence from file.\n");
+                fclose(f);
+                break;
+            }
+        }
+        fscanf(f, "\n");
+    }
+
+    fclose(f);
+}
+
 int main() {
     int choice;
     char player1[20], player2[20];
@@ -181,7 +206,6 @@ int main() {
         srand(time(NULL));
         playGame(player1, player2, 1);
         break;
-    
     default:
         break;
     }
